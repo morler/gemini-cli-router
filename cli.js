@@ -2,7 +2,7 @@
 
 import { spawn } from 'child_process';
 import path from 'path';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const interceptorLoader = path.join(__dirname, 'interceptor-loader.js');
@@ -11,9 +11,10 @@ import { spawnSync } from 'child_process';
 
 function findGeminiExecutable() {
     try {
-        const result = spawnSync('which', ['gemini'], { stdio: 'pipe', encoding: 'utf-8' });
-        if (result.status === 0) {
-            return result.stdout.trim();
+        const result = spawnSync('where', ['gemini'], { stdio: 'pipe', encoding: 'utf-8' });
+        if (result.status === 0 && result.stdout.trim()) {
+            // Return the first result from 'where'
+            return result.stdout.split('\n')[0].trim();
         }
     } catch (error) {
         // ignore
@@ -64,12 +65,33 @@ if (debug) {
     console.log('[Router] Debug mode enabled. Logging to gemini-cli-router.log');
 }
 
-const child = spawn('node', [
-    '--import',
-    interceptorLoader,
-    geminiCLIPath,
-    ...args
-], {
+// Determine how to spawn the gemini CLI based on its file type
+let spawnArgs = [];
+let spawnCommand = 'node';
+
+if (geminiCLIPath.endsWith('.js')) {
+    // If it's a JS file, spawn it with node and the interceptor
+    spawnArgs = [
+        '--import',
+        pathToFileURL(interceptorLoader).href,
+        geminiCLIPath,
+        ...args
+    ];
+} else {
+    // If it's a shell script or executable, execute it through a shell
+    // On Windows, use 'cmd' to execute the script
+    // The interceptor is loaded via NODE_OPTIONS
+    spawnCommand = 'cmd';
+    spawnArgs = [
+        '/c',
+        geminiCLIPath,
+        ...args
+    ];
+    // Set NODE_OPTIONS to preload the interceptor
+    env.NODE_OPTIONS = `--import=${pathToFileURL(interceptorLoader).href}`;
+}
+
+const child = spawn(spawnCommand, spawnArgs, {
     stdio: 'inherit',
     env: env
 });

@@ -12,19 +12,42 @@ This tool acts as a proxy to route requests from the Gemini CLI to various OpenA
 
 ## Installation
 
-### Option1: install via npm
+### Option 1: Install via npm (Not Recommended for Forks)
 
 ```bash
 npm install -g @zhifac/gemini-cli-router
 ```
+**Note**: This option installs the original package from npm, which may not include the latest fixes from this fork.
 
 ### Option2: install from source
 
 1.  Clone this repository.
-2.  Install the dependencies:
+2.  Navigate to the project directory:
     ```bash
-    npm install --prefix gemini-cli-router
+    cd gemini-cli-router
     ```
+3.  Install the dependencies:
+    ```bash
+    npm install
+    ```
+4.  Link the package globally:
+    ```bash
+    npm link
+    ```
+    This will create a symbolic link to the `cli.js` file in your global `node_modules`, making the `gemini-cli-router` command available system-wide.
+
+### Running from Source
+
+To run the tool directly from the source code, navigate to the project directory and execute:
+
+```bash
+cd gemini-cli-router
+node cli.js
+```
+
+**Note**: 
+1. Due to ESM path resolution, running `node gemini-cli-router/cli.js` from the parent directory may not work correctly. Always run the command from within the `gemini-cli-router` directory.
+2. The tool requires the `gemini` CLI to be installed and available in your PATH, or you can specify its path using the `GEMINI_CLI_PATH` environment variable.
 
 ## Configuration
 
